@@ -6,9 +6,6 @@ const port = 4000;
 
 const messages = [];
 
-app.listen(port, () => {
-  console.error(`Chat server listening on port ${port}`);
-});
 app.get("/", (req, res) => {
   res.json(messages);
 });
@@ -24,7 +21,7 @@ function validateBody(body) {
     return "Expected body to be a JSON object containing keys message and username.";
   }
   if (typeof body.message !== "string" || typeof body.username !== "string")
-    return "Message and username must be a string.";
+    return "Message and username must be a strings.";
 
   return null;
 }
@@ -65,11 +62,19 @@ app.post("/", (req, res) => {
         res.status(400).send(validateMessageError);
         return;
     }
-    messages.push({
-        message : message,
-        username: username,
-    });
-    res.status(201).send("Message Added successfully.")
+    const newMessage = {
+      //id :
+      message: message,
+      username: username,
+      //created at
+    };
+    messages.push(newMessage);
+    res.status(201).send("Message Added successfully.") // later:  sent the new message  
 
   });
+});
+
+
+app.listen(port, () => {
+  console.error(`Chat server listening on port ${port}`);
 });
