@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { buffer } from "node:stream/consumers";
 const app = express();
 app.use(cors());
 const port = 4000;
@@ -36,10 +37,10 @@ function validateMessage(trimmedMessage, trimmedUsername) {
 }
 
 app.post("/", (req, res) => {
-  const bodyBytes = [];
-  req.on("data", (chunk) => bodyBytes.push(...chunk));
+  const bodyChunks = [];
+  req.on("data", (chunk) => bodyBytes.push(chunk));
   req.on("end", () => {
-    const bodyString = String.fromCharCode(...bodyBytes);
+    const bodyString = buffer.concat(bodyChunks).toString("utf8")
     let body;
     try {
       body = JSON.parse(bodyString);
