@@ -9,3 +9,6 @@ const messages = [];
 app.listen(port,()=> {
     console.error(`Chat server listening on port ${port}`)
 });
+app.get("/",(req,res) => {
+    res.json(messages)
+})
