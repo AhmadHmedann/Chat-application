@@ -5,7 +5,7 @@ app.use(cors());
 const port = 4000;
 
 const messages = [];
-
+let nextMessageId = 1;
 app.get("/", (req, res) => {
   res.json(messages);
 });
@@ -21,7 +21,7 @@ function validateBody(body) {
     return "Expected body to be a JSON object containing keys message and username.";
   }
   if (typeof body.message !== "string" || typeof body.username !== "string")
-    return "Message and username must be a strings.";
+    return "Message and username must be strings.";
 
   return null;
 }
@@ -47,33 +47,29 @@ app.post("/", (req, res) => {
       res.status(400).send("Expected body to be JSON.");
       return;
     }
-    const validateBodyError = validateBody(body)
-    if(validateBodyError !==null)
-    {
-        res.status(400).send(validateBodyError);
-        return ;
+    const validateBodyError = validateBody(body);
+    if (validateBodyError !== null) {
+      res.status(400).send(validateBodyError);
+      return;
     }
-    
+
     const message = body.message.trim();
     const username = body.username.trim();
-    const validateMessageError = validateMessage(message,username);
-    if(validateMessageError !== null)
-    {
-        res.status(400).send(validateMessageError);
-        return;
+    const validateMessageError = validateMessage(message, username);
+    if (validateMessageError !== null) {
+      res.status(400).send(validateMessageError);
+      return;
     }
     const newMessage = {
-      //id :
+      id: nextMessageId++,
       message: message,
       username: username,
-      //created at
+      createdAt:new Date().toISOString(),
     };
     messages.push(newMessage);
-    res.status(201).send("Message Added successfully.") // later:  sent the new message  
-
+    res.status(201).json(newMessage); 
   });
 });
-
 
 app.listen(port, () => {
   console.error(`Chat server listening on port ${port}`);
