@@ -9,8 +9,8 @@ async function fetchMessages() {
     }
     messages = await response.json(); //reads the response body and parses JSON into JS value
     sortMessagesOldestFirst(messages);
-    // function displayAllMessage(messages){}
-  } catch (error) {
+    renderMessages(messages)
+} catch (error) {
     console.error("Failed to fetch messages: ", error); // what is the error here ????
   }
 }
@@ -39,4 +39,16 @@ function MessageCard({ id, username, message, createdAt }) {
   return card;
 }
 
-fetchMessages();
+function renderMessages(messages) {
+  const rootEle = document.getElementById("messages-root");
+  rootEle.textContent = "";
+  if (messages.length === 0) {
+    rootEle.textContent = "There are no messages to display :(";
+    return;
+  }
+  messages.forEach((message) => {
+    const card = MessageCard(message);
+    rootEle.append(card);
+  });
+}
+fetchMessages()
