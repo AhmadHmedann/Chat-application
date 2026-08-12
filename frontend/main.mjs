@@ -102,7 +102,15 @@ async function handleSubmit(event) {
       const responseMessage = await response.text();
       throw new Error(responseMessage || `HTTP error; ${response.status}`);
     }
-    const result = await response.json(); //I will receive a new message object I will display it later
+    const newMessage = await response.json();
+    messages.push(newMessage);
+    const newMessageCard = MessageCard(newMessage);
+    const messageRoot = document.getElementById("messages-root");
+    if (messages.length === 1) {
+      messageRoot.textContent = "";
+    }
+    messageRoot.append(newMessageCard);
+
     formFeedbackMessage.textContent = "Message sent successfully.";
     formFeedbackMessage.className = "success";
     formElm.reset();
@@ -110,7 +118,6 @@ async function handleSubmit(event) {
     formFeedbackMessage.textContent =
       error.message || "Failed to send the message. Please try again.";
     formFeedbackMessage.className = "error";
-    console.error("failed to send message:", error);
   }
 }
 
