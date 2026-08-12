@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+  </head>
+  <body>
+    <main>
+      <h1>Chat messages</h1>
+
+      <div id="messages-root" class="messages-container" aria-live="polite"></div>
+
+      <template id="show-message-template">
+        <article class="show-message">
+          <div class="message-body">
+            <h2 class="message-username"></h2>
+            <p class="message-content"></p>
+            <time class="message-created-time"></time>
+          </div>
+        </article>
+      </template>
+    </main>
+  </body>
+</html>
