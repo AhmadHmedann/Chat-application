@@ -38,9 +38,9 @@ function validateMessage(trimmedMessage, trimmedUsername) {
 
 app.post("/", (req, res) => {
   const bodyChunks = [];
-  req.on("data", (chunk) => bodyBytes.push(chunk));
+  req.on("data", (chunk) => bodyChunks.push(chunk));
   req.on("end", () => {
-    const bodyString = buffer.concat(bodyChunks).toString("utf8")
+    const bodyString = Buffer.concat(bodyChunks).toString("utf8")
     let body;
     try {
       body = JSON.parse(bodyString);
