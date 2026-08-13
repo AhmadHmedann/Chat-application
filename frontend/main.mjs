@@ -1,4 +1,4 @@
-const backend = "http://localhost:4000/";
+const backend = "https://hm-chat-application.trainees.hosting.cyf.academy/";
 let messages = [];
 
 async function fetchMessages() {
@@ -71,10 +71,6 @@ function validateMessage(trimmedUsername, trimmedMessage) {
   return null;
 }
 async function handleSubmit(event) {
-  //provent default  and clear feedback message read the values and trim validation
-  //if invalid (display validtion error add class error inside catch  and return to stop)
-  //crate message Object   and convert to JSON
-  //post request fetch the backend recieve status
   event.preventDefault();
   formFeedbackMessage.textContent = "";
   const username = document.getElementById("username-input").value.trim();
@@ -122,3 +118,4 @@ async function handleSubmit(event) {
 }
 
 fetchMessages();
+//next Add live/regular updates for messages sent by """"other"""" users.
