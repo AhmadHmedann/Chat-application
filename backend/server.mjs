@@ -8,7 +8,21 @@ const port = 4000;
 const messages = [];
 let nextMessageId = 1;
 app.get("/", (req, res) => {
-  res.json(messages);
+  const since = req.query.since;
+  if (since === undefined) {
+    res.json(messages);
+    return;
+  }
+  const sinceTime = new Date(since).getTime();
+  if (Number.isNaN(sinceTime)) {
+    res.status(400).send("Invalid timestamp");
+      return;
+  }
+  const newMessages = messages.filter((message) => {
+    const messageTime = new Date(message.createdAt).getTime();
+    return messageTime > sinceTime;
+  });
+  res.json(newMessages);
 });
 
 function validateBody(body) {
@@ -40,7 +54,7 @@ app.post("/", (req, res) => {
   const bodyChunks = [];
   req.on("data", (chunk) => bodyChunks.push(chunk));
   req.on("end", () => {
-    const bodyString = Buffer.concat(bodyChunks).toString("utf8")
+    const bodyString = Buffer.concat(bodyChunks).toString("utf8");
     let body;
     try {
       body = JSON.parse(bodyString);
@@ -65,10 +79,10 @@ app.post("/", (req, res) => {
       id: nextMessageId++,
       message: message,
       username: username,
-      createdAt:new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     messages.push(newMessage);
-    res.status(201).json(newMessage); 
+    res.status(201).json(newMessage);
   });
 });
 

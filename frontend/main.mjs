@@ -1,4 +1,6 @@
+
 const backend = "https://hm-chat-application.trainees.hosting.cyf.academy/";
+// const backend = "http://localhost:4000/";
 let messages = [];
 
 async function fetchMessages() {
@@ -10,6 +12,7 @@ async function fetchMessages() {
     messages = await response.json(); //reads the response body and parses JSON into JS value
     sortMessagesOldestFirst(messages);
     renderMessages(messages);
+    keepFetchingMessages();
   } catch (error) {
     console.error("Failed to fetch messages: ", error); // what is the error here ????
   }
@@ -117,5 +120,33 @@ async function handleSubmit(event) {
   }
 }
 
+async function keepFetchingMessages() {
+
+    try{
+  const lastMessageTime =
+    messages.length !== 0 ? messages[messages.length - 1].createdAt : null;
+  const queryString = lastMessageTime
+    ? `?since=${encodeURIComponent(lastMessageTime)}`
+    : "";
+  const URl = `${backend}${queryString}`;
+
+  const response = await fetch(URl);
+  if (!response.ok) {
+    const responseMessage = await response.text();
+    throw new Error(responseMessage || `HTTP error : ${response.status}`);
+  }
+  const newMessages = await response.json();
+  const messageRoot = document.getElementById("messages-root");
+
+  newMessages.forEach((message) => {
+    messages.push(message);
+    const card = MessageCard(message);
+    messageRoot.append(card)
+  });
+}catch{
+    console.error("Failed to check for new messages:",error)
+}
+  setTimeout(keepFetchingMessages,3000)
+}
 fetchMessages();
 //next Add live/regular updates for messages sent by """"other"""" users.
