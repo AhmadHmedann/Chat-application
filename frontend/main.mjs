@@ -131,8 +131,8 @@ async function handleSubmit(event) {
 async function keepFetchingMessages() {
   try {
     const lastMessageTime =
-      messages.length !== 0 ? messages[messages.length - 1].createdAt : null; // I have bug here related with line 151  because when I have empty message he send normal
-                                                                        // GET request and receive empty array and keep going repeat fetching 
+      messages.length !== 0 ? messages[messages.length - 1].createdAt : new Date(0).toISOString();
+                                                                      
     const queryString = lastMessageTime
       ? `?since=${encodeURIComponent(lastMessageTime)}`
       : "";
