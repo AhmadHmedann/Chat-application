@@ -8,27 +8,6 @@ const port = 4000;
 const callbacksForNewMessages = [];
 const messages = [];
 let nextMessageId = 1;
-app.get("/", (req, res) => {
-  const since = req.query.since;
-  if (since === undefined) {
-    res.json(messages);
-    return;
-  }
-  const sinceTime = new Date(since).getTime();
-  if (Number.isNaN(sinceTime)) {
-    res.status(400).send("Invalid timestamp");
-    return;
-  }
-  const messagesToSend = messages.filter((message) => {
-    const messageTime = new Date(message.createdAt).getTime();
-    return messageTime > sinceTime;
-  });
-  if (messagesToSend.length === 0) {
-    callbacksForNewMessages.push((value) => res.json(value));
-  } else {
-    res.json(messagesToSend);
-  }
-});
 
 function validateBody(body) {
   if (
@@ -54,6 +33,28 @@ function validateMessage(trimmedMessage, trimmedUsername) {
 
   return null;
 }
+
+app.get("/", (req, res) => {
+  const since = req.query.since;
+  if (since === undefined) {
+    res.json(messages);
+    return;
+  }
+  const sinceTime = new Date(since).getTime();
+  if (Number.isNaN(sinceTime)) {
+    res.status(400).send("Invalid timestamp");
+    return;
+  }
+  const messagesToSend = messages.filter((message) => {
+    const messageTime = new Date(message.createdAt).getTime();
+    return messageTime > sinceTime;
+  });
+  if (messagesToSend.length === 0) {
+    callbacksForNewMessages.push((value) => res.json(value));
+  } else {
+    res.json(messagesToSend);
+  }
+});
 
 app.post("/", (req, res) => {
   const bodyChunks = [];
@@ -87,13 +88,11 @@ app.post("/", (req, res) => {
       createdAt: new Date().toISOString(),
     };
     messages.push(newMessage);
-    while(callbacksForNewMessages.length > 0)
-    {
-      const callback = callbacksForNewMessages.pop()
-      callback([newMessage])
+    while (callbacksForNewMessages.length > 0) {
+      const callback = callbacksForNewMessages.pop();
+      callback([newMessage]);
     }
-  res.status(201).json(newMessage)
-
+    res.status(201).json(newMessage);
   });
 });
 
