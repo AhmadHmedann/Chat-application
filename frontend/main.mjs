@@ -1,6 +1,5 @@
-
-const backend = "https://hm-chat-application.trainees.hosting.cyf.academy/";
-// const backend = "http://localhost:4000/";
+// const backend = "https://hm-chat-application.trainees.hosting.cyf.academy/";
+const backend = "http://localhost:4000/";
 let messages = [];
 
 async function fetchMessages() {
@@ -16,6 +15,21 @@ async function fetchMessages() {
   } catch (error) {
     console.error("Failed to fetch messages: ", error); // what is the error here ????
   }
+}
+function addMessageIfNew(newMessage) {
+  const alreadyExists = messages.some(
+    (message) => message.id === newMessage.id,
+  );
+  if (alreadyExists) {
+    return;
+  }
+  messages.push(newMessage);
+  const newMessageCard = MessageCard(newMessage);
+  const messageRoot = document.getElementById("messages-root");
+  if (messages.length === 1) {
+    messageRoot.textContent = "";
+  }
+  messageRoot.append(newMessageCard);
 }
 
 function sortMessagesOldestFirst(messages) {
@@ -102,13 +116,7 @@ async function handleSubmit(event) {
       throw new Error(responseMessage || `HTTP error; ${response.status}`);
     }
     const newMessage = await response.json();
-    messages.push(newMessage);
-    const newMessageCard = MessageCard(newMessage);
-    const messageRoot = document.getElementById("messages-root");
-    if (messages.length === 1) {
-      messageRoot.textContent = "";
-    }
-    messageRoot.append(newMessageCard);
+    addMessageIfNew(newMessage);
 
     formFeedbackMessage.textContent = "Message sent successfully.";
     formFeedbackMessage.className = "success";
@@ -121,32 +129,30 @@ async function handleSubmit(event) {
 }
 
 async function keepFetchingMessages() {
+  try {
+    const lastMessageTime =
+      messages.length !== 0 ? messages[messages.length - 1].createdAt : null; // I have bug here related with line 151  because when I have empty message he send normal
+                                                                        // GET request and receive empty array and keep going repeat fetching 
+    const queryString = lastMessageTime
+      ? `?since=${encodeURIComponent(lastMessageTime)}`
+      : "";
+    const URl = `${backend}${queryString}`;
 
-    try{
-  const lastMessageTime =
-    messages.length !== 0 ? messages[messages.length - 1].createdAt : null;
-  const queryString = lastMessageTime
-    ? `?since=${encodeURIComponent(lastMessageTime)}`
-    : "";
-  const URl = `${backend}${queryString}`;
+    const response = await fetch(URl);
+    if (!response.ok) {
+      const responseMessage = await response.text();
+      throw new Error(responseMessage || `HTTP error : ${response.status}`);
+    }
+    const newMessages = await response.json();
+    // const messageRoot = document.getElementById("messages-root");
 
-  const response = await fetch(URl);
-  if (!response.ok) {
-    const responseMessage = await response.text();
-    throw new Error(responseMessage || `HTTP error : ${response.status}`);
+    newMessages.forEach((message) => {
+      addMessageIfNew(message);
+    });
+    keepFetchingMessages();
+  } catch (error) {
+    console.error("Failed to check for new messages:", error);
+    setTimeout(keepFetchingMessages, 3000);
   }
-  const newMessages = await response.json();
-  const messageRoot = document.getElementById("messages-root");
-
-  newMessages.forEach((message) => {
-    messages.push(message);
-    const card = MessageCard(message);
-    messageRoot.append(card)
-  });
-}catch{
-    console.error("Failed to check for new messages:",error)
-}
-  setTimeout(keepFetchingMessages,3000)
 }
 fetchMessages();
-//next Add live/regular updates for messages sent by """"other"""" users.
