@@ -1,9 +1,9 @@
-import { server as WebSocketServer } from "websocket"; //const WebSocketServer = websocket.server
+import { client, server as WebSocketServer } from "websocket"; //const WebSocketServer = websocket.server
 import express from "express"; // is a class or function ?
 import http from "node:http";
 import cors from "cors";
 import { validateBody, validateMessage } from "./shared.mjs";
-import { type, userInfo } from "node:os";
+import { type } from "node:os";
 const app = express();
 app.use(cors());
 
@@ -93,10 +93,22 @@ webSocketServer.on("request", (request) => {
         createdAt: new Date().toISOString(),
      };
      messages.push(newMessage)
+
+     const response = JSON.stringify({type:"message",data:newMessage});
+     connections.forEach((client)=>{
+        if(client.connected)
+        {
+            client.sendUTF(response)
+        }
+     })
   });
-  connection.on("close", (reasonCode, description) => {
-    console.log("disconnected"); /////////////////////////////
-  });
+  connection.on("close", () => {
+    const connectionIndex =connections.indexOf(connection);
+    if(connectionIndex!==-1){
+        connection.splice(connectionIndex,1);
+    }
+    console.log(`Websocket disconnected. Active connections:${connections.length}`)
+});
 });
 
 server.listen(port, () => {
