@@ -3,4 +3,4 @@ ENV NODE_ENV=production
 COPY . /app
 WORKDIR /app
 RUN npm --omit=dev ci
-ENTRYPOINT ["node", "server.mjs"]
+ENTRYPOINT ["node", "polling-server.mjs"]
