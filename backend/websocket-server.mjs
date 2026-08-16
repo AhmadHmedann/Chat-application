@@ -23,10 +23,6 @@ const webSocketServer = new WebSocketServer({
   autoAcceptConnections: false,
 }); //at this point express handles normal HTTP requests. webSocketServer handles WebSocket upgrade requests (both use same port)
 
-server.listen(port, () => {
-  //start the server  notice server.     not app.  (now the websocket server is attached to server)
-  console.error(`WebSocket chat server is listening on port :${port}`);
-});
 
 function originIsAllowed(origin) {
   //check the requesting website
@@ -45,11 +41,41 @@ webSocketServer.on("request", (request) => {
   }
   const connection = request.accept("chat-protocol", request.origin); //return a connection object representing that particular browser tab
   connections.push(connection);
-  console.log(`WebSocket connection accepted. Active connections: ${connections.length}`); ///////////////////////////////////////////////////////////////////////////////
+  console.log(
+    `WebSocket connection accepted. Active connections: ${connections.length}`,
+  ); ///////////////////////////////////////////////////////////////////////////////
+  connection.on("message", (message) => {
+    //   that fired when  client use socket.send("keke")
+    if (message.type !== "utf8") {
+      connection.sendUTF(
+        JSON.stringify({
+          type: "error",
+          message: "Expect a text message ",
+        }),
+      );
+      return;
+    }
+    let body;
+    try {
+      body = JSON.parse(message.utf8Data);
+    } catch (error) {
+      connection.sendUTF(
+        JSON.stringify({
+          type: "error",
+          message: "Expected message to be valid JSON ",
+        }),
+      );
+      return;
+    }
+  });
+  connection.on("close", (reasonCode, description) => {
+    console.log("disconnected"); /////////////////////////////
+  });
 });
-// connection.on("message", (message) => {
-//   //   that fired when  client use socket.send("keke")
-// });
-// connection.on("close", (reasonCode, description) => {
-//   console.log("disconnected"); /////////////////////////////
-// });
+
+
+
+server.listen(port, () => {
+  //start the server  notice server.     not app.  (now the websocket server is attached to server)
+  console.error(`WebSocket chat server is listening on port :${port}`);
+});
