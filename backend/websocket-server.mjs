@@ -2,7 +2,8 @@ import { server as WebSocketServer } from "websocket"; //const WebSocketServer =
 import express from "express"; // is a class or function ?
 import http from "node:http";
 import cors from "cors";
-
+import { validateBody, validateMessage } from "./shared.mjs";
+import { type, userInfo } from "node:os";
 const app = express();
 app.use(cors());
 
@@ -22,7 +23,6 @@ const webSocketServer = new WebSocketServer({
   httpServer: server,
   autoAcceptConnections: false,
 }); //at this point express handles normal HTTP requests. webSocketServer handles WebSocket upgrade requests (both use same port)
-
 
 function originIsAllowed(origin) {
   //check the requesting website
@@ -67,13 +67,37 @@ webSocketServer.on("request", (request) => {
       );
       return;
     }
+    const validateBodyError = validateBody(body);
+    if (validateBodyError !== null) {
+      connection.sendUTF(
+        JSON.stringify({ type: "error", message: validateBodyError }),
+      );
+      return;
+    }
+    const trimmedMessage = body.message.trim();
+    const trimmedUserName = body.username.trim();
+    const validateMessageError = validateMessage(
+      trimmedMessage,
+      trimmedUserName,
+    );
+     if (validateMessageError !== null) {
+       connection.sendUTF(
+         JSON.stringify({ type: "error", message: validateMessageError }),
+       );
+       return;
+     }
+     const newMessage = {
+        id:nextMessageId++,
+        username:trimmedUserName,
+        message:trimmedMessage,
+        createdAt: new Date().toISOString(),
+     };
+     messages.push(newMessage)
   });
   connection.on("close", (reasonCode, description) => {
     console.log("disconnected"); /////////////////////////////
   });
 });
-
-
 
 server.listen(port, () => {
   //start the server  notice server.     not app.  (now the websocket server is attached to server)
