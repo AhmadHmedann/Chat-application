@@ -1,28 +1,27 @@
-import { client, server as WebSocketServer } from "websocket"; //const WebSocketServer = websocket.server
-import express from "express"; // is a class or function ?
+import { server as WebSocketServer } from "websocket"; 
+import express from "express"; 
 import http from "node:http";
 import cors from "cors";
 import { validateBody, validateMessage } from "./shared.mjs";
-import { type } from "node:os";
 const app = express();
 app.use(cors());
 
 const port = 4000;
 const messages = [];
-const connections = []; //to stores active WebSocket connection objects- one for every connected browser tab
+const connections = []; 
 let nextMessageId = 1;
 
-//handle normal HTTP request
-app.get("/", (req, res) => {
-  //we need to load the history only once then websocket will handle everything that happens afterwards
-  res.json(messages);
-});
+// //handle normal HTTP request
+// app.get("/", (req, res) => {
+//   //we need to load the history only once then websocket will handle everything that happens afterwards
+//   res.json(messages);
+// });
 const server = http.createServer(app); // create HTTP server
 //Attach the WebSocket server
 const webSocketServer = new WebSocketServer({
   httpServer: server,
   autoAcceptConnections: false,
-}); //at this point express handles normal HTTP requests. webSocketServer handles WebSocket upgrade requests (both use same port)
+});
 
 function originIsAllowed(origin) {
   //check the requesting website
@@ -31,7 +30,7 @@ function originIsAllowed(origin) {
 }
 
 webSocketServer.on("request", (request) => {
-  //Registers a handler for WebSocket handshake requests.
+ 
   if (!originIsAllowed(request.origin)) {
     //request.origin is the address of the frontend requesting the connection
     //to make sure that  we only accept requests from an allowed origin
@@ -39,13 +38,16 @@ webSocketServer.on("request", (request) => {
     console.log(`connection from origin ${request.origin} rejected.`); ///////////////////////////////////////
     return;
   }
-  const connection = request.accept("chat-protocol", request.origin); //return a connection object representing that particular browser tab
+  const connection = request.accept("chat-protocol", request.origin); 
   connections.push(connection);
   console.log(
     `WebSocket connection accepted. Active connections: ${connections.length}`,
-  ); ///////////////////////////////////////////////////////////////////////////////
+  ); 
+connection.sendUTF(JSON.stringify({
+    type:"message-history",
+    data: messages,
+}))
   connection.on("message", (message) => {
-    //   that fired when  client use socket.send("keke")
     if (message.type !== "utf8") {
       connection.sendUTF(
         JSON.stringify({
@@ -94,7 +96,7 @@ webSocketServer.on("request", (request) => {
      };
      messages.push(newMessage)
 
-     const response = JSON.stringify({type:"message",data:newMessage});
+     const response = JSON.stringify({type:"message-added",data:newMessage});
      connections.forEach((client)=>{
         if(client.connected)
         {
@@ -105,13 +107,12 @@ webSocketServer.on("request", (request) => {
   connection.on("close", () => {
     const connectionIndex =connections.indexOf(connection);
     if(connectionIndex!==-1){
-        connection.splice(connectionIndex,1);
+        connections.splice(connectionIndex,1);
     }
     console.log(`Websocket disconnected. Active connections:${connections.length}`)
 });
 });
 
 server.listen(port, () => {
-  //start the server  notice server.     not app.  (now the websocket server is attached to server)
   console.error(`WebSocket chat server is listening on port :${port}`);
 });
