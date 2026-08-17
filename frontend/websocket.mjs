@@ -27,6 +27,17 @@ function handleReceivedMessage(receivedObject) {
   if (receivedObject.type === "error") {
     formFeedbackMessage.textContent = receivedObject.data;
   }
+  if (receivedObject.type ==="message-sent")
+  {
+    formFeedbackMessage.textContent = receivedObject.data
+    formFeedbackMessage.className = "success";
+
+    setTimeout(()=>{
+           formFeedbackMessage.textContent = "";
+           formFeedbackMessage.className = "";
+    },1000)
+   }
+
 }
 
 websocket.addEventListener("open", () => {

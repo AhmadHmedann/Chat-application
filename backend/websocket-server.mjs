@@ -3,6 +3,7 @@ import express from "express";
 import http from "node:http";
 import cors from "cors";
 import { validateBody, validateMessage } from "./shared.mjs";
+import { type } from "node:os";
 const app = express();
 app.use(cors());
 
@@ -95,7 +96,10 @@ connection.sendUTF(JSON.stringify({
         createdAt: new Date().toISOString(),
      };
      messages.push(newMessage)
-
+     connection.sendUTF(JSON.stringify({
+        type:"message-sent",
+        data:"Message sent Successfully."
+     }))
      const response = JSON.stringify({type:"message-added",data:newMessage});
      connections.forEach((client)=>{
         if(client.connected)
