@@ -8,9 +8,10 @@ import {
 
 const websocketURL = "ws://localhost:4000";
 const websocket = new WebSocket(websocketURL, "chat-protocol");
-const rootEle = document.getElementById("messages-root")
+const rootEle = document.getElementById("messages-root");
 const submitButton = document.getElementById("submit-button");
 const formFeedbackMessage = document.getElementById("form-feedback");
+const formElm = document.getElementById("message-form");
 
 let messages = [];
 
@@ -21,7 +22,6 @@ function handleReceivedMessage(receivedObject) {
   }
   if (receivedObject.type === "message-added") {
     const newMessage = receivedObject.data;
-    console.log(newMessage);
     addMessageIfNew(messages, newMessage);
   }
   if (receivedObject.type === "error") {
@@ -32,6 +32,7 @@ function handleReceivedMessage(receivedObject) {
 websocket.addEventListener("open", () => {
   console.log("connected to the websocket server");
   submitButton.disabled = false;
+
   //I can add the connection status (connected) and add className success
 });
 
@@ -40,11 +41,33 @@ websocket.addEventListener("error", () => {
 });
 websocket.addEventListener("close", () => {
   console.log("Websocket connection close");
+   submitButton.disabled = true;
   //I can add the connection status (disconnected) and add className error
 });
 websocket.addEventListener("message", (event) => {
-const receivedObject= JSON.parse(event.data)
-handleReceivedMessage(receivedObject)
+  const receivedObject = JSON.parse(event.data);
+  handleReceivedMessage(receivedObject);
 });
 
 
+function handleSubmitMessage(event) {
+  event.preventDefault();
+  formFeedbackMessage.textContent = "";
+  const username = document.getElementById("username-input").value.trim();
+  const message = document.getElementById("message-input").value.trim();
+  const validateMessageError = validateMessage(username, message);
+  if(validateMessageError!==null)
+  {
+    formFeedbackMessage.textContent = validateMessageError;
+    formFeedbackMessage.className= "error"
+    return;
+  }
+  const newMessage = {
+    username: username,
+    message: message,
+  }
+  websocket.send(JSON.stringify(newMessage))
+  formElm.reset();
+}
+
+  formElm.addEventListener("submit", handleSubmitMessage);

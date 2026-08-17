@@ -64,7 +64,7 @@ connection.sendUTF(JSON.stringify({
       connection.sendUTF(
         JSON.stringify({
           type: "error",
-          message: "Expected message to be valid JSON ",
+          data: "Expected message to be valid JSON ",
         }),
       );
       return;
@@ -72,7 +72,7 @@ connection.sendUTF(JSON.stringify({
     const validateBodyError = validateBody(body);
     if (validateBodyError !== null) {
       connection.sendUTF(
-        JSON.stringify({ type: "error", message: validateBodyError }),
+        JSON.stringify({ type: "error", data: validateBodyError }),
       );
       return;
     }
@@ -84,7 +84,7 @@ connection.sendUTF(JSON.stringify({
     );
      if (validateMessageError !== null) {
        connection.sendUTF(
-         JSON.stringify({ type: "error", message: validateMessageError }),
+         JSON.stringify({ type: "error", data: validateMessageError }),
        );
        return;
      }
