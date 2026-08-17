@@ -4,6 +4,7 @@ const backend = "http://localhost:4000/";
 let messages = [];
 const formFeedbackMessage = document.getElementById("form-feedback");
 const formElm = document.getElementById("message-form");
+const rootEle = document.getElementById("messages-root");
 
 
 
@@ -15,7 +16,7 @@ async function fetchMessages() {
     }
     messages = await response.json();
     sortMessagesOldestFirst(messages);
-    renderMessages(messages);
+    renderMessages(messages,rootEle);
     keepFetchingMessages();
   } catch (error) {
     console.error("Failed to fetch messages: ", error);

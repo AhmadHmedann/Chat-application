@@ -53,8 +53,7 @@ export function MessageCard({ id, username, message, createdAt }) {
 
   return card;
 }
-export function renderMessages(messages) {
-  const rootEle = document.getElementById("messages-root");
+export function renderMessages(messages,rootEle) {
   rootEle.textContent = "";
   if (messages.length === 0) {
     rootEle.textContent = "There are no messages to display :(";

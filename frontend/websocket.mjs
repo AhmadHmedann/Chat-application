@@ -2,7 +2,6 @@ import {
   sortMessagesOldestFirst,
   validateMessage,
   addMessageIfNew,
-  MessageCard,
   renderMessages,
 } from "./shared.mjs";
 
@@ -18,7 +17,7 @@ let messages = [];
 function handleReceivedMessage(receivedObject) {
   if (receivedObject.type === "message-history") {
     messages = sortMessagesOldestFirst(receivedObject.data);
-    renderMessages(messages);
+    renderMessages(messages,rootEle);
   }
   if (receivedObject.type === "message-added") {
     const newMessage = receivedObject.data;
@@ -26,11 +25,14 @@ function handleReceivedMessage(receivedObject) {
   }
   if (receivedObject.type === "error") {
     formFeedbackMessage.textContent = receivedObject.data;
+    formFeedbackMessage.className = "error";
+
   }
   if (receivedObject.type ==="message-sent")
   {
     formFeedbackMessage.textContent = receivedObject.data
     formFeedbackMessage.className = "success";
+    formElm.reset()
 
     setTimeout(()=>{
            formFeedbackMessage.textContent = "";
@@ -41,19 +43,15 @@ function handleReceivedMessage(receivedObject) {
 }
 
 websocket.addEventListener("open", () => {
-  console.log("connected to the websocket server");
   submitButton.disabled = false;
 
-  //I can add the connection status (connected) and add className success
 });
 
 websocket.addEventListener("error", () => {
   console.error("Websocket connection failed");
 });
 websocket.addEventListener("close", () => {
-  console.log("Websocket connection close");
    submitButton.disabled = true;
-  //I can add the connection status (disconnected) and add className error
 });
 websocket.addEventListener("message", (event) => {
   const receivedObject = JSON.parse(event.data);
@@ -77,8 +75,8 @@ function handleSubmitMessage(event) {
     username: username,
     message: message,
   }
+
   websocket.send(JSON.stringify(newMessage))
-  formElm.reset();
 }
 
   formElm.addEventListener("submit", handleSubmitMessage);
