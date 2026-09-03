@@ -3,7 +3,6 @@ import express from "express";
 import http from "node:http";
 import cors from "cors";
 import { validateBody, validateMessage } from "./shared.mjs";
-import { type } from "node:os";
 const app = express();
 app.use(cors());
 
@@ -12,11 +11,7 @@ const messages = [];
 const connections = []; 
 let nextMessageId = 1;
 
-// //handle normal HTTP request
-// app.get("/", (req, res) => {
-//   //we need to load the history only once then websocket will handle everything that happens afterwards
-//   res.json(messages);
-// });
+
 const server = http.createServer(app); // create HTTP server
 //Attach the WebSocket server
 const webSocketServer = new WebSocketServer({
@@ -24,6 +19,92 @@ const webSocketServer = new WebSocketServer({
   autoAcceptConnections: false,
 });
 
+
+function handleReceivedMessage(receivedObject,connection){
+  if(receivedObject.type==="newMessage")
+  {
+    
+    let body = receivedObject.data
+    console.log(body);
+
+    const validateBodyError = validateBody(body);
+    if (validateBodyError !== null) {
+      connection.sendUTF(
+        JSON.stringify({ type: "error", data: validateBodyError }),
+      );
+      return;
+    }
+    const trimmedMessage = body.message.trim();
+    const trimmedUserName = body.username.trim();
+    const validateMessageError = validateMessage(
+      trimmedMessage,
+      trimmedUserName,
+    );
+     if (validateMessageError !== null) {
+       connection.sendUTF(
+         JSON.stringify({ type: "error", data: validateMessageError }),
+       );
+       return;
+     }
+     const newMessage = {
+        id:nextMessageId++,
+        username:trimmedUserName,
+        message:trimmedMessage,
+        createdAt: new Date().toISOString(),
+        likesCount:0,
+        dislikesCount:0,
+     };
+     messages.push(newMessage)
+     connection.sendUTF(JSON.stringify({
+        type:"message-sent",
+        data:"Message sent Successfully."
+     }))
+     const response = JSON.stringify({type:"message-added",data:newMessage});
+     connections.forEach((client)=>{
+        if(client.connected)
+        {
+            client.sendUTF(response)
+        }
+     })
+  }
+  if(receivedObject.type==="reaction")
+  {
+    //find the correct message from messages
+    //update the reaction counter 
+    //send the update to the connections
+    const message = messages.find((message)=>{
+    return message.id === receivedObject.data.messageId;
+    })
+    if(!message)
+    {
+       connection.sendUTF(
+        JSON.stringify({ type: "error", data: "Message not found" }),
+      );
+      return;
+    }
+    const action = receivedObject.data.action;
+    if(action==="like")
+    {
+      message.likesCount++;
+    }
+    if(action ==="dislike")
+    {
+      message.dislikesCount++;
+    }
+    const updatedMessage = {
+      type:"updatedMessage",
+      data:{messageId:message.id,
+            likesCount:message.likesCount,
+            dislikesCount:message.dislikesCount,
+      }
+    }
+    connections.forEach((client)=>{
+      if(client.connected){
+      client.sendUTF(JSON.stringify(updatedMessage));
+      }
+    })
+  }
+}
 function originIsAllowed(origin) {
   //check the requesting website
   // return origin === "my front end domain"
@@ -53,14 +134,14 @@ connection.sendUTF(JSON.stringify({
       connection.sendUTF(
         JSON.stringify({
           type: "error",
-          message: "Expect a text message ",
+          data: "Expect a text message ",
         }),
       );
       return;
     }
-    let body;
+    let receivedObject;
     try {
-      body = JSON.parse(message.utf8Data);
+      receivedObject = JSON.parse(message.utf8Data);
     } catch (error) {
       connection.sendUTF(
         JSON.stringify({
@@ -70,43 +151,45 @@ connection.sendUTF(JSON.stringify({
       );
       return;
     }
-    const validateBodyError = validateBody(body);
-    if (validateBodyError !== null) {
-      connection.sendUTF(
-        JSON.stringify({ type: "error", data: validateBodyError }),
-      );
-      return;
-    }
-    const trimmedMessage = body.message.trim();
-    const trimmedUserName = body.username.trim();
-    const validateMessageError = validateMessage(
-      trimmedMessage,
-      trimmedUserName,
-    );
-     if (validateMessageError !== null) {
-       connection.sendUTF(
-         JSON.stringify({ type: "error", data: validateMessageError }),
-       );
-       return;
-     }
-     const newMessage = {
-        id:nextMessageId++,
-        username:trimmedUserName,
-        message:trimmedMessage,
-        createdAt: new Date().toISOString(),
-     };
-     messages.push(newMessage)
-     connection.sendUTF(JSON.stringify({
-        type:"message-sent",
-        data:"Message sent Successfully."
-     }))
-     const response = JSON.stringify({type:"message-added",data:newMessage});
-     connections.forEach((client)=>{
-        if(client.connected)
-        {
-            client.sendUTF(response)
-        }
-     })
+    handleReceivedMessage(receivedObject,connection);
+
+    // const validateBodyError = validateBody(body);
+    // if (validateBodyError !== null) {
+    //   connection.sendUTF(
+    //     JSON.stringify({ type: "error", data: validateBodyError }),
+    //   );
+    //   return;
+    // }
+    // const trimmedMessage = body.message.trim();
+    // const trimmedUserName = body.username.trim();
+    // const validateMessageError = validateMessage(
+    //   trimmedMessage,
+    //   trimmedUserName,
+    // );
+    //  if (validateMessageError !== null) {
+    //    connection.sendUTF(
+    //      JSON.stringify({ type: "error", data: validateMessageError }),
+    //    );
+    //    return;
+    //  }
+    //  const newMessage = {
+    //     id:nextMessageId++,
+    //     username:trimmedUserName,
+    //     message:trimmedMessage,
+    //     createdAt: new Date().toISOString(),
+    //  };
+    //  messages.push(newMessage)
+    //  connection.sendUTF(JSON.stringify({
+    //     type:"message-sent",
+    //     data:"Message sent Successfully."
+    //  }))
+    //  const response = JSON.stringify({type:"message-added",data:newMessage});
+    //  connections.forEach((client)=>{
+    //     if(client.connected)
+    //     {
+    //         client.sendUTF(response)
+    //     }
+    //  })
   });
   connection.on("close", () => {
     const connectionIndex =connections.indexOf(connection);

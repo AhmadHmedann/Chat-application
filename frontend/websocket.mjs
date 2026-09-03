@@ -17,7 +17,7 @@ let messages = [];
 function handleReceivedMessage(receivedObject) {
   if (receivedObject.type === "message-history") {
     messages = sortMessagesOldestFirst(receivedObject.data);
-    renderMessages(messages,rootEle);
+    renderMessages(messages, rootEle);
   }
   if (receivedObject.type === "message-added") {
     const newMessage = receivedObject.data;
@@ -26,38 +26,40 @@ function handleReceivedMessage(receivedObject) {
   if (receivedObject.type === "error") {
     formFeedbackMessage.textContent = receivedObject.data;
     formFeedbackMessage.className = "error";
-
   }
-  if (receivedObject.type ==="message-sent")
-  {
-    formFeedbackMessage.textContent = receivedObject.data
+  if (receivedObject.type === "message-sent") {
+    formFeedbackMessage.textContent = receivedObject.data;
     formFeedbackMessage.className = "success";
-    formElm.reset()
+    formElm.reset();
 
-    setTimeout(()=>{
-           formFeedbackMessage.textContent = "";
-           formFeedbackMessage.className = "";
-    },1000)
-   }
-
+    setTimeout(() => {
+      formFeedbackMessage.textContent = "";
+      formFeedbackMessage.className = "";
+    }, 1000);
+  }
+  if(receivedObject.type ==="updatedMessage"){
+    console.log(receivedObject);
+    const updatedMessage = messages.find((message)=>message.id === receivedObject.data.messageId)
+    updatedMessage.likesCount = receivedObject.data.likesCount;
+    updatedMessage.dislikesCount = receivedObject.data.dislikesCount;
+    renderMessages(messages,rootEle);
+  }
 }
 
 websocket.addEventListener("open", () => {
   submitButton.disabled = false;
-
 });
 
 websocket.addEventListener("error", () => {
   console.error("Websocket connection failed");
 });
 websocket.addEventListener("close", () => {
-   submitButton.disabled = true;
+  submitButton.disabled = true;
 });
 websocket.addEventListener("message", (event) => {
   const receivedObject = JSON.parse(event.data);
   handleReceivedMessage(receivedObject);
 });
-
 
 function handleSubmitMessage(event) {
   event.preventDefault();
@@ -65,18 +67,33 @@ function handleSubmitMessage(event) {
   const username = document.getElementById("username-input").value.trim();
   const message = document.getElementById("message-input").value.trim();
   const validateMessageError = validateMessage(username, message);
-  if(validateMessageError!==null)
-  {
+  if (validateMessageError !== null) {
     formFeedbackMessage.textContent = validateMessageError;
-    formFeedbackMessage.className= "error"
+    formFeedbackMessage.className = "error";
     return;
   }
   const newMessage = {
     username: username,
     message: message,
-  }
+  };
 
-  websocket.send(JSON.stringify(newMessage))
+  websocket.send(JSON.stringify({type:"newMessage",
+    data:newMessage}));
+}
+function handleReaction(event) {
+  const reactionBtn = event.target.closest(".reaction-btn");
+  if (!reactionBtn) return;
+  const messageElm = event.target.closest(".show-message");
+
+  const action = reactionBtn.dataset.action;
+  const messageId = messageElm.dataset.messageId;
+  const messageReaction = {
+    type: "reaction",
+    data: { messageId: Number(messageId), action: action },
+  };
+  websocket.send(JSON.stringify(messageReaction));
+  console.log("handle is fire")
 }
 
-  formElm.addEventListener("submit", handleSubmitMessage);
+formElm.addEventListener("submit", handleSubmitMessage);
+rootEle.addEventListener("click",handleReaction)

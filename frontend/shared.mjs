@@ -35,7 +35,7 @@ export function addMessageIfNew(messages,newMessage) {
   messageRoot.append(newMessageCard);
 }
 
-export function MessageCard({ id, username, message, createdAt }) {
+export function MessageCard({ id, username, message, createdAt,likesCount,dislikesCount }) {
   const template = document.getElementById("show-message-template");
   const card = template.content.cloneNode(true);
   //   const root = card.firstElementChild;
@@ -50,6 +50,14 @@ export function MessageCard({ id, username, message, createdAt }) {
   const timeEle = card.querySelector(".message-created-time");
   timeEle.textContent = new Date(createdAt).toLocaleString();
   timeEle.dateTime = createdAt;
+
+  const messageElm = card.querySelector(".show-message");
+  messageElm.dataset.messageId = id;
+
+  const likeBtn = card.querySelector(`[data-action="like"]`);
+  likeBtn.textContent = `❤️ ${(likesCount)??0}`;
+  const dislikeBtn = card.querySelector(`[data-action="dislike"]`)
+  dislikeBtn.textContent = `👎${(dislikesCount??0)}`;
 
   return card;
 }
