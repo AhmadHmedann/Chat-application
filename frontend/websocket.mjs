@@ -5,7 +5,7 @@ import {
   renderMessages,
 } from "./shared.mjs";
 
-const websocketURL = "ws://localhost:4000";
+const websocketURL = "wss://hm-chat-application.trainees.hosting.cyf.academy/";
 const websocket = new WebSocket(websocketURL, "chat-protocol");
 const rootEle = document.getElementById("messages-root");
 const submitButton = document.getElementById("submit-button");
@@ -38,7 +38,6 @@ function handleReceivedMessage(receivedObject) {
     }, 1000);
   }
   if(receivedObject.type ==="updatedMessage"){
-    console.log(receivedObject);
     const updatedMessage = messages.find((message)=>message.id === receivedObject.data.messageId)
     updatedMessage.likesCount = receivedObject.data.likesCount;
     updatedMessage.dislikesCount = receivedObject.data.dislikesCount;
@@ -92,7 +91,6 @@ function handleReaction(event) {
     data: { messageId: Number(messageId), action: action },
   };
   websocket.send(JSON.stringify(messageReaction));
-  console.log("handle is fire")
 }
 
 formElm.addEventListener("submit", handleSubmitMessage);

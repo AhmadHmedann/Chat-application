@@ -38,9 +38,7 @@ export function addMessageIfNew(messages,newMessage) {
 export function MessageCard({ id, username, message, createdAt,likesCount,dislikesCount }) {
   const template = document.getElementById("show-message-template");
   const card = template.content.cloneNode(true);
-  //   const root = card.firstElementChild;
-  //         root.id = String(id)
-
+  
   const usernameEle = card.querySelector(".message-username");
   usernameEle.textContent = username;
 

@@ -12,7 +12,7 @@ const connections = [];
 let nextMessageId = 1;
 
 
-const server = http.createServer(app); // create HTTP server
+const server = http.createServer(app); 
 //Attach the WebSocket server
 const webSocketServer = new WebSocketServer({
   httpServer: server,
@@ -25,7 +25,6 @@ function handleReceivedMessage(receivedObject,connection){
   {
     
     let body = receivedObject.data
-    console.log(body);
 
     const validateBodyError = validateBody(body);
     if (validateBodyError !== null) {
@@ -117,7 +116,7 @@ webSocketServer.on("request", (request) => {
     //request.origin is the address of the frontend requesting the connection
     //to make sure that  we only accept requests from an allowed origin
     request.reject();
-    console.log(`connection from origin ${request.origin} rejected.`); ///////////////////////////////////////
+    console.log(`connection from origin ${request.origin} rejected.`);
     return;
   }
   const connection = request.accept("chat-protocol", request.origin); 
@@ -153,43 +152,6 @@ connection.sendUTF(JSON.stringify({
     }
     handleReceivedMessage(receivedObject,connection);
 
-    // const validateBodyError = validateBody(body);
-    // if (validateBodyError !== null) {
-    //   connection.sendUTF(
-    //     JSON.stringify({ type: "error", data: validateBodyError }),
-    //   );
-    //   return;
-    // }
-    // const trimmedMessage = body.message.trim();
-    // const trimmedUserName = body.username.trim();
-    // const validateMessageError = validateMessage(
-    //   trimmedMessage,
-    //   trimmedUserName,
-    // );
-    //  if (validateMessageError !== null) {
-    //    connection.sendUTF(
-    //      JSON.stringify({ type: "error", data: validateMessageError }),
-    //    );
-    //    return;
-    //  }
-    //  const newMessage = {
-    //     id:nextMessageId++,
-    //     username:trimmedUserName,
-    //     message:trimmedMessage,
-    //     createdAt: new Date().toISOString(),
-    //  };
-    //  messages.push(newMessage)
-    //  connection.sendUTF(JSON.stringify({
-    //     type:"message-sent",
-    //     data:"Message sent Successfully."
-    //  }))
-    //  const response = JSON.stringify({type:"message-added",data:newMessage});
-    //  connections.forEach((client)=>{
-    //     if(client.connected)
-    //     {
-    //         client.sendUTF(response)
-    //     }
-    //  })
   });
   connection.on("close", () => {
     const connectionIndex =connections.indexOf(connection);
